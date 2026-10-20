@@ -5,14 +5,18 @@ afterwards.
 
 ## Reopening a saved run
 
-Pass a CSV log file to the app to open it in viewer mode:
+Click **Open run…** in the top bar and choose a CSV log. The run opens in its own
+**tab** next to **Live** — recording carries on in the Live tab meanwhile. Close
+a tab with its **×**.
+
+You can also open a log directly, without connecting to the instrument:
 
 ```bash
 AktaPrime lysozyme_20260714_142530.csv
 ```
 
-The full display is reconstructed — traces, events and fraction spans — with no
-instrument connection required.
+The full display is reconstructed — traces, events, fraction spans and the run
+information.
 
 ## Zooming and panning
 
@@ -23,24 +27,50 @@ Every chromatogram panel supports the standard interactions:
 | **Drag** (left mouse) | Zoom into a rectangle |
 | **Right-drag** | Pan |
 | **Scroll** | Zoom in/out |
-| **Ctrl-click** | Reset the zoom to fit the data |
+| **Ctrl-click** | Reset the zoom and follow the live data again |
+| **Alt- or Shift-click** | Inspect that moment (see below) |
+| **Hover** | Show the values under the mouse |
 
 The panels share a common x-axis, so zooming or panning one moves them all
-together.
+together. While a run is recorded, zooming or panning switches **Follow live**
+off, so your view stays put while new data arrive; tick it again (or
+Ctrl-click) to follow the run.
 
 ## Choosing what to show
 
-- The **toggles** on the right turn the %B, conductivity, pH and pressure panels
-  on and off. The UV panel is always shown.
-- The **menu** switches the x-axis between **Plot vs time** and
-  **Plot vs volume**. The current view is carried across so you stay looking at
-  the same part of the run.
+The toolbar above the plots:
+
+- the **menu** sets the x-axis: **Plot vs time**, **Plot vs volume** or **Plot vs
+  column volumes** (using the column volume from Run info);
+- **Overlay** draws all traces in one plot, each scaled to 0–100 % of its range;
+  the buttons above the plot name each trace with its real range, and clicking
+  one highlights it and shows its real values on the y-axis. **Stacked** returns
+  to one panel per trace;
+- the **checkboxes** switch the %B, conductivity, pH, pressure and flow panels on
+  and off (UV is always shown). Which ones start switched on is a
+  [setting](@ref Settings);
+- **Show log** opens the run log below the plots.
+
+## Inspecting a moment
+
+Drag the **slider** below the plots, or Alt/Shift-click in a plot, to pick a
+moment: a dashed line marks it in every panel, and the Run and Readings cards and
+the flow-path schematic show the state at that moment — valve positions, buffer
+port, fraction, set flow and all readings. **Live** (or **End** for an opened
+run) returns to the latest data.
+
+## The run log
+
+**Show log** lists every event of the run — valve moves, method steps, marks,
+run information — with its time and volume. Type in the filter box to narrow the
+list, scroll with the mouse wheel, and click a line to inspect that moment.
 
 ## Saving results as images
 
-Click **Save plot…** to export the chromatogram exactly as displayed — the
-panels currently shown, at their current axis limits — to a **PDF** file. Files
-are numbered per session and saved in the current folder:
+Click **Save plot…** to export the chromatogram — the panels currently shown, at
+their current axis limits, with the overlay below them — to a **PDF** file in
+the data folder (for an opened run, next to its CSV). Files are numbered per
+session:
 
 ```
 <prefix>_<date>_<time>_figure_1.pdf
@@ -49,7 +79,7 @@ are numbered per session and saved in the current folder:
 ```
 
 PDF is a vector format, so the figures stay crisp at any size and are ready to
-drop into a report or manuscript.
+drop into a report or manuscript. Exports always use the light colour scheme.
 
 ## Log file format
 
@@ -72,7 +102,7 @@ event rows (`EVT_CONNECT`, `EVT_INJECT`, `EVT_LOG`, …) carry a message.*
 | `wall_time` | Clock time the row was written |
 | `cum_time_ms` | Cumulative run time (ms) |
 | `cum_vol_mL` | Cumulative run volume (mL) |
-| `type` | `TREND` for a data sample, or an event type (e.g. `EVT_INJECT`, `EVT_LOG`) |
+| `type` | `TREND` for a data sample, or an event type (e.g. `EVT_INJECT`, `EVT_LOG`, `EVT_MARK` for your marks, `EVT_INFO` for run information) |
 | `uv_AU` | UV absorbance (AU) |
 | `cond_mScm` | Conductivity (mS/cm) |
 | `ph` | pH |

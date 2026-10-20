@@ -5,9 +5,9 @@
 [![CI](https://github.com/waudbylab/AktaPrime.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/waudbylab/AktaPrime.jl/actions/workflows/CI.yml)
 [![Documentation build](https://github.com/waudbylab/AktaPrime.jl/actions/workflows/Documenter.yml/badge.svg)](https://github.com/waudbylab/AktaPrime.jl/actions/workflows/Documenter.yml)
 
-AktaPrime is a Julia app for logging and visualising **ÄKTAprime plus**
-chromatography data — an open replacement for the discontinued PrimeView control
-software.
+AktaPrime is a Julia app for logging and visualising **ÄKTAprime** and
+**ÄKTAprime plus** chromatography data — an open replacement for the discontinued
+PrimeView control software.
 
 > **Disclaimer.** AktaPrime.jl is an **independent, unofficial** project. It is
 > **not affiliated with, authorised, endorsed, or supported by Cytiva** (formerly

@@ -29,6 +29,8 @@ end
     EVT_TUBEFEED
     EVT_LOG
     EVT_STEP
+    EVT_MARK     # user event mark, added during a run
+    EVT_INFO     # run documentation ("Sample: …", "Port 3: …"), not drawn in plots
 end
 
 @enum InjectValue begin
@@ -61,8 +63,13 @@ mutable struct InstrumentState
     fraction_number::Int
     fraction_vol_mL::Float64
     current_fraction_idx::Union{Int,Nothing}  # index into app.fractions[] of active fraction, or nothing if idle
+    buffer_port::Int           # buffer valve inlet port 1–8 feeding the A side
+    buffer_port_known::Bool    # false until a "Buffer Valve Pos N" message confirms buffer_port
 end
-InstrumentState() = InstrumentState("---", 0.0, 0.0, 0.0, 0.0, IV_UNKNOWN, "", "", 0.0, 0.0, 1, 0.0, nothing)
+# The buffer valve is only reported when it moves, so start from the standard
+# port 1 and mark it as assumed until the first report.
+InstrumentState() = InstrumentState("---", 0.0, 0.0, 0.0, 0.0, IV_UNKNOWN, "", "", 0.0, 0.0, 1, 0.0, nothing,
+    1, false)
 
 """
 Application-wide shared state.  Passed to OPC handlers and the CSV writer.
@@ -88,6 +95,9 @@ mutable struct AppState
 
     # base name for rolled-over log files ("<prefix>_<timestamp>.csv" per run)
     log_prefix::String
+
+    # folder for log files and exported plots ("" = current folder)
+    log_dir::String
 end
 
 AppState() = AppState(
@@ -100,6 +110,7 @@ AppState() = AppState(
     nothing,
     "",
     "akta",
+    "",
 )
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -129,7 +140,7 @@ function update_fraction_state!(app::AppState)::Bool
         push!(fracs, frac)
         inst.current_fraction_idx = length(fracs)
         changed = true
-        @info "Started fraction #$(inst.fraction_number) at t=$(inst.cum_time_ms/1000)s v=$(inst.cum_vol_mL)mL"
+        @debug "Started fraction #$(inst.fraction_number) at t=$(inst.cum_time_ms/1000)s v=$(inst.cum_vol_mL)mL"
 
     elseif collecting && !isnothing(inst.current_fraction_idx)
         idx = inst.current_fraction_idx
@@ -145,7 +156,7 @@ function update_fraction_state!(app::AppState)::Bool
                     inst.cum_time_ms,
                     inst.cum_vol_mL
                 )
-                @info "Stopped fraction #$(current.fraction_number) at t=$(inst.cum_time_ms/1000)s v=$(inst.cum_vol_mL)mL"
+                @debug "Stopped fraction #$(current.fraction_number) at t=$(inst.cum_time_ms/1000)s v=$(inst.cum_vol_mL)mL"
 
                 # Start new fraction
                 frac = Fraction(
@@ -157,7 +168,7 @@ function update_fraction_state!(app::AppState)::Bool
                 )
                 push!(fracs, frac)
                 inst.current_fraction_idx = length(fracs)
-                @info "Started fraction #$(inst.fraction_number) at t=$(inst.cum_time_ms/1000)s v=$(inst.cum_vol_mL)mL"
+                @debug "Started fraction #$(inst.fraction_number) at t=$(inst.cum_time_ms/1000)s v=$(inst.cum_vol_mL)mL"
                 changed = true
             end
         end
@@ -174,7 +185,7 @@ function update_fraction_state!(app::AppState)::Bool
                 inst.cum_time_ms,
                 inst.cum_vol_mL
             )
-            @info "Stopped fraction #$(current.fraction_number) at t=$(inst.cum_time_ms/1000)s v=$(inst.cum_vol_mL)mL"
+            @debug "Stopped fraction #$(current.fraction_number) at t=$(inst.cum_time_ms/1000)s v=$(inst.cum_vol_mL)mL"
         end
         inst.current_fraction_idx = nothing
         changed = true

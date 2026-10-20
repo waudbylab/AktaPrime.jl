@@ -1,8 +1,9 @@
 # Demo mode
 
-You do not need an instrument to try AktaPrime.jl. If no ÄKTA Prime is found on
-the serial port when the app starts, it automatically switches to **demo mode**
-and feeds the display with simulated data.
+You do not need an instrument to try AktaPrime.jl. Switch on **Demo mode** on
+the [Settings page](@ref Settings) and the display is fed with simulated data;
+switch it off to connect to the instrument again. The setting is remembered, so
+the app starts in demo mode until you switch it off.
 
 This is useful for:
 
@@ -18,26 +19,13 @@ exactly as it does with a real instrument.*
 
 ## Starting demo mode
 
-Just run the app on a computer with no instrument connected:
+Start the app, click **Settings** in the top bar and switch on **Demo mode**. The
+current log is closed, simulated data start straight away, and the status bar
+shows a blue **DEMO** badge. Without demo mode and without an instrument, the app
+simply waits for the instrument to be connected.
 
-```bash
-AktaPrime
-```
-
-The startup banner tells you it is running in demo mode, and reminds you how to
-connect a real instrument when you are ready:
-
-```
-  No instrument was found on the serial port:
-      /dev/tty.usbserial-110
-
-  Starting in DEMO MODE with simulated data, so you can explore
-  the interface without an instrument connected.
-```
-
-You are still asked for a log-file prefix, and demo data are logged to CSV
-exactly as a real run would be (with a `akta_demo` default prefix), so you can
-practise the whole workflow including reopening and exporting results.
+Demo data are logged to CSV exactly as a real run would be, so you can practise
+the whole workflow including reopening and exporting results.
 
 ## What the demo does
 

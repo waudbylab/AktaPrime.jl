@@ -563,6 +563,30 @@ c[2] = ( byte[1]        >> 4 ) + 0x30
 
 ---
 
+## Method store
+
+Verified 2026-10 from the disassembly of UNICORN 5.31's `Bin/p232_drv.exe`
+("ÄKTAprime Driver", build 743); implemented in `src/methodstore.jl`. The table
+rows `0x2007`–`0x2020` and `0x8008`–`0x8011` below replace earlier guesses.
+
+The PC is a numbered file store for the instrument's "save to PC" and "Run
+Stored Method → PC". Method n is the text file `PrimeMeth_NNN.txt` (n = 1–999).
+All numbers are little-endian.
+
+- **Text messages** carry at most 34 characters. A load sends each line of the
+  file without its line end, skipping empty lines: `0x8008` for a whole line,
+  otherwise `0x8009`, `0x8010`…, `0x8011`. A line over 99 characters aborts the
+  load with `0x2014 [02]`.
+- **Escaping** (all method text; `#` would start a frame): `zy` = `#`;
+  `z`+c = c for c in `z { | } ~`; `~` = CR; `}` = CR LF; `|`+n = n spaces and
+  `{`+n = n `*` (n = count + `'0'`, runs of 2–60).
+- **Save**: `0x2009 [n]`, text, `0x2010` → `0x2011 [1]`. The decoded text is the
+  file. **Dump**: `0x2007`, text, `0x2008` — same text format, not stored.
+- **List** `0x2015 [start, dir]` → `0x2016`: the first ten existing numbers from
+  `start` up or down; a start outside 1–999 lists nothing.
+
+---
+
 ## Instrument opcodes
 
 ### Host → instrument
@@ -570,8 +594,13 @@ c[2] = ( byte[1]        >> 4 ) + 0x30
 | OPC | nob | Name |
 |---|---|---|
 | `0x1001` | 1 | Connect: `{0x01}`=connect, `{0x00}`=disconnect |
-| `0x2007`-`0x2010` | varies | Method dump/save/load operations |
-| `0x2015`, `0x2017`, `0x2019` | 3/2/2 | Method search/delete/check |
+| `0x2011` | 1 | Method save result: 1 saved, 0 not saved |
+| `0x2013` | 0 | Method load begins (lines follow as `0x8008`–`0x8011`) |
+| `0x2014` | 1 | Method load end: 0 OK, 1 no such method, 2 error |
+| `0x2016` | 20 | Method list: 10 × u16 method numbers, `0xFFFF` = empty slot |
+| `0x2018` | 1 | Method delete result: 1 deleted, 0 not |
+| `0x2020` | 1 | Method exists: 1 yes, 0 no |
+| `0x8008`–`0x8011` | n | Method text of a load (see *Method store* below) |
 | `0x8003` | n | Text command (ASCII, see encoding below) |
 
 ### Instrument → host
@@ -585,8 +614,15 @@ c[2] = ( byte[1]        >> 4 ) + 0x30
 | `0x2005` | 10 | TubeFeed event |
 | `0x8001` | n | Program name |
 | `0x8002` | n | Program version |
-| `0x8007`/`0x8008` | n | Method dump chunks |
-| `0x8009`/`0x800a` | n | Method save chunks |
+| `0x2007` / `0x2008` | 0 / 1 | Method dump begin / end (method report before a run) |
+| `0x2009` | 2 | Method save begin: u16 method number |
+| `0x2010` | 0 | Method save end (host answers `0x2011`) |
+| `0x2012` | 2 | Load method: u16 number (host answers `0x2013` … `0x2014`) |
+| `0x2015` | 3 | List methods: u16 start number, u8 direction (≠0 = up), start inclusive (host answers `0x2016`) |
+| `0x2017` | 2 | Delete method: u16 number (host answers `0x2018`) |
+| `0x2019` | 2 | Does method exist: u16 number (host answers `0x2020`) |
+| `0x8008` | n | Method text: one whole line (dump, save) |
+| `0x8009`/`0x8010`/`0x8011` | n | Method text: first / middle / last part of a long line |
 | `0x800b`/`0x800c` | n | Log message chunks |
 | `0x514` | n | Hardware detection response |
 | `0xfffd` | n | Debug text |

@@ -45,3 +45,5 @@ jobs:
             @assert isdefined(AktaPrime, :main)
             println("AktaPrime loaded OK")
           '
+      - name: Run tests
+        run: xvfb-run -a julia --project=. -e 'using Pkg; Pkg.test()'

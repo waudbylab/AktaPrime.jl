@@ -152,4 +152,21 @@ which port to use once, and it remembers your choice.
    ```
 
 Once set, the port is saved as a preference, so on subsequent runs you can just
-type `AktaPrime`.
+type `AktaPrime`. It can also be changed at any time on the
+[Settings page](@ref Settings).
+
+## Faster start (system image)
+
+Julia compiles code the first time it is used, so the first start of the app —
+and the first use of some features — takes a while (around 20–30 s to a usable
+window). When running from a copy of the source code, a **system image** with
+everything precompiled cuts this to a few seconds:
+
+```bash
+julia --project=sysimage sysimage/build.jl     # once; takes 10–20 minutes
+./AktaPrime.sh                                 # then start the app with it
+```
+
+`AktaPrime.sh` uses the image automatically. Rebuild it after updating the code
+or packages: if the code is newer than the image, `AktaPrime.sh` says so and
+starts without it, so changes are never silently ignored.

@@ -1,4 +1,12 @@
 .claude
 *.csv
+*_raw.txt
+*.met
 docs/build
 *figure*.pdf
+sysimage/*.so
+sysimage/*.dll
+sysimage/*.dylib
+LocalPreferences.toml
+/UNICORN
+/methods

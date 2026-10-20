@@ -13,10 +13,10 @@ function init_csv(filename::String)::IO
     return io
 end
 
-"""Timestamped log-file name for the app's current prefix: `<prefix>_<stamp>.csv`."""
+"""Timestamped log-file path for the app's prefix and folder: `<dir>/<prefix>_<stamp>.csv`."""
 function newlogname(app::AppState)::String
     prefix = isempty(app.log_prefix) ? "akta" : app.log_prefix
-    "$(prefix)_$(Dates.format(Dates.now(), "yyyymmdd_HHMMSS")).csv"
+    joinpath(app.log_dir, "$(prefix)_$(Dates.format(Dates.now(), "yyyymmdd_HHMMSS")).csv")
 end
 
 """
@@ -25,6 +25,10 @@ timestamped one and clear the display.  A no-op (returning `false`) when the
 current log holds no trend data yet, so back-to-back run-start signals and the
 first run after connecting do not spawn empty files.
 """
+# Called with the app whenever a new log file is started (acquisition.jl sets it
+# to record the run information at the top of every log).
+const ON_NEW_LOG = Ref{Function}(app -> nothing)
+
 function rolllog!(app::AppState)::Bool
     isempty(app.trend_data[]) && return false
     isnothing(app.csv_io) || close(app.csv_io)
@@ -32,6 +36,7 @@ function rolllog!(app::AppState)::Bool
     app.csv_io = init_csv(name)
     app.log_filename = name
     resetrun!(app)
+    ON_NEW_LOG[](app)
     @info "New run detected — logging to $name"
     return true
 end
@@ -66,6 +71,8 @@ const _EVENT_KIND_MAP = Dict(
     "EVT_TUBEFEED" => EVT_TUBEFEED,
     "EVT_LOG" => EVT_LOG,
     "EVT_STEP" => EVT_STEP,
+    "EVT_MARK" => EVT_MARK,
+    "EVT_INFO" => EVT_INFO,
 )
 
 """
